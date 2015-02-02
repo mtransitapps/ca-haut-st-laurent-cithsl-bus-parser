@@ -172,13 +172,39 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		int stopId;
 		if (gStop.stop_id.startsWith("LSL")) {
 			stopId = 100000;
+		} else if (gStop.stop_id.startsWith("CHT")) {
+			stopId = 200000;
+		} else if (gStop.stop_id.startsWith("GOD")) {
+			stopId = 300000;
+		} else if (gStop.stop_id.startsWith("HOW")) {
+			stopId = 400000;
+		} else if (gStop.stop_id.startsWith("HUN")) {
+			stopId = 500000;
+		} else if (gStop.stop_id.startsWith("KAH")) {
+			stopId = 600000;
+		} else if (gStop.stop_id.startsWith("MER")) {
+			stopId = 700000;
+		} else if (gStop.stop_id.startsWith("MTL")) {
+			stopId = 800000;
+		} else if (gStop.stop_id.startsWith("ORM")) {
+			stopId = 900000;
+		} else if (gStop.stop_id.startsWith("SMN")) {
+			stopId = 1000000;
+		} else if (gStop.stop_id.startsWith("SPC")) {
+			stopId = 1100000;
+		} else if (gStop.stop_id.startsWith("TSS")) {
+			stopId = 1200000;
 		} else {
 			System.out.println("Stop doesn't have an ID (start with)! " + gStop);
 			System.exit(-1);
 			stopId = -1;
 		}
-		if (gStop.stop_id.endsWith("B")) {
+		if (gStop.stop_id.endsWith("A")) {
+			stopId += 1000;
+		} else if (gStop.stop_id.endsWith("B")) {
 			stopId += 2000;
+		} else if (gStop.stop_id.endsWith("C")) {
+			stopId += 3000;
 		} else if (gStop.stop_id.endsWith("D")) {
 			stopId += 4000;
 		} else {
