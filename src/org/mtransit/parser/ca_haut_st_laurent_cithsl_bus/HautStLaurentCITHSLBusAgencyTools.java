@@ -14,7 +14,7 @@ import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
-import org.mtransit.parser.mt.data.MSpec;
+import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
 
 // https://www.amt.qc.ca/en/about/open-data
@@ -35,11 +35,11 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("Generating CITHSL bus data...\n");
+		System.out.printf("\nGenerating CITHSL bus data...\n");
 		long start = System.currentTimeMillis();
 		this.serviceIds = extractUsefulServiceIds(args, this);
 		super.start(args);
-		System.out.printf("Generating CITHSL bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+		System.out.printf("\nGenerating CITHSL bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
@@ -83,13 +83,13 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public String getRouteLongName(GRoute gRoute) {
 		String routeLongName = gRoute.route_long_name;
-		routeLongName = MSpec.SAINT.matcher(routeLongName).replaceAll(MSpec.SAINT_REPLACEMENT);
-		routeLongName = MSpec.POINT.matcher(routeLongName).replaceAll(MSpec.POINT_REPLACEMENT);
-		routeLongName = MSpec.ET.matcher(routeLongName).replaceAll(MSpec.ET_REPLACEMENT);
+		routeLongName = CleanUtils.SAINT.matcher(routeLongName).replaceAll(CleanUtils.SAINT_REPLACEMENT);
+		routeLongName = CleanUtils.POINT.matcher(routeLongName).replaceAll(CleanUtils.POINT_REPLACEMENT);
+		routeLongName = CleanUtils.ET.matcher(routeLongName).replaceAll(CleanUtils.ET_REPLACEMENT);
 		routeLongName = P1METRO.matcher(routeLongName).replaceAll(P1METRO_REPLACEMENT);
 		routeLongName = SECTEUR.matcher(routeLongName).replaceAll(SECTEUR_REPLACEMENT);
 		routeLongName = DASH_DES.matcher(routeLongName).replaceAll(DASH_DES_REPLACEMENT);
-		return MSpec.cleanLabel(routeLongName);
+		return CleanUtils.cleanLabel(routeLongName);
 	}
 
 	private static final String AGENCY_COLOR = "40B54D";
@@ -111,8 +111,8 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 	public String cleanTripHeadsign(String tripHeadsign) {
 		tripHeadsign = DIRECTION.matcher(tripHeadsign).replaceAll(DIRECTION_REPLACEMENT);
 		tripHeadsign = SECTEUR.matcher(tripHeadsign).replaceAll(SECTEUR_REPLACEMENT);
-		tripHeadsign = MSpec.POINT.matcher(tripHeadsign).replaceAll(MSpec.POINT_REPLACEMENT);
-		return MSpec.cleanLabelFR(tripHeadsign);
+		tripHeadsign = CleanUtils.POINT.matcher(tripHeadsign).replaceAll(CleanUtils.POINT_REPLACEMENT);
+		return CleanUtils.cleanLabelFR(tripHeadsign);
 	}
 
 	private static final Pattern STATION_DE_METRO = Pattern.compile("(station de métro )", Pattern.CASE_INSENSITIVE);
@@ -141,8 +141,8 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		gStopName = STATION_DE_METRO.matcher(gStopName).replaceAll(STATION_DE_METRO_REPLACEMENT);
 		gStopName = AVENUE.matcher(gStopName).replaceAll(AVENUE_REPLACEMENT);
 		gStopName = BOULEVARD.matcher(gStopName).replaceAll(BOULEVARD_REPLACEMENT);
-		gStopName = Utils.replaceAll(gStopName, START_WITH_FACES, MSpec.SPACE);
-		gStopName = Utils.replaceAll(gStopName, SPACE_FACES, MSpec.SPACE);
+		gStopName = Utils.replaceAll(gStopName, START_WITH_FACES, CleanUtils.SPACE);
+		gStopName = Utils.replaceAll(gStopName, SPACE_FACES, CleanUtils.SPACE);
 		return super.cleanStopNameFR(gStopName);
 	}
 
