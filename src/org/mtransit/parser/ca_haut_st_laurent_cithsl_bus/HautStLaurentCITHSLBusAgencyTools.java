@@ -35,7 +35,7 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("\nGenerating CITHSL bus data...\n");
+		System.out.printf("\nGenerating CITHSL bus data...");
 		long start = System.currentTimeMillis();
 		this.serviceIds = extractUsefulServiceIds(args, this);
 		super.start(args);
