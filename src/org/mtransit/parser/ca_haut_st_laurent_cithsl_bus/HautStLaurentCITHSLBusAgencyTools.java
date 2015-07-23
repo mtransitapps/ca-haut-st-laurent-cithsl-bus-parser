@@ -82,7 +82,7 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public String getRouteLongName(GRoute gRoute) {
-		String routeLongName = gRoute.route_long_name;
+		String routeLongName = gRoute.getRouteLongName();
 		routeLongName = CleanUtils.SAINT.matcher(routeLongName).replaceAll(CleanUtils.SAINT_REPLACEMENT);
 		routeLongName = CleanUtils.POINT.matcher(routeLongName).replaceAll(CleanUtils.POINT_REPLACEMENT);
 		routeLongName = CleanUtils.ET.matcher(routeLongName).replaceAll(CleanUtils.ET_REPLACEMENT);
@@ -101,7 +101,7 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
-		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.trip_headsign), gTrip.direction_id);
+		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
 	}
 
 	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
@@ -154,46 +154,46 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		if (stopCode != null && stopCode.length() > 0) {
 			return Integer.valueOf(stopCode); // using stop code as stop ID
 		}
-		Matcher matcher = DIGITS.matcher(gStop.stop_id);
+		Matcher matcher = DIGITS.matcher(gStop.getStopId());
 		matcher.find();
 		int digits = Integer.parseInt(matcher.group());
 		int stopId;
-		if (gStop.stop_id.startsWith("LSL")) {
+		if (gStop.getStopId().startsWith("LSL")) {
 			stopId = 100000;
-		} else if (gStop.stop_id.startsWith("CHT")) {
+		} else if (gStop.getStopId().startsWith("CHT")) {
 			stopId = 200000;
-		} else if (gStop.stop_id.startsWith("GOD")) {
+		} else if (gStop.getStopId().startsWith("GOD")) {
 			stopId = 300000;
-		} else if (gStop.stop_id.startsWith("HOW")) {
+		} else if (gStop.getStopId().startsWith("HOW")) {
 			stopId = 400000;
-		} else if (gStop.stop_id.startsWith("HUN")) {
+		} else if (gStop.getStopId().startsWith("HUN")) {
 			stopId = 500000;
-		} else if (gStop.stop_id.startsWith("KAH")) {
+		} else if (gStop.getStopId().startsWith("KAH")) {
 			stopId = 600000;
-		} else if (gStop.stop_id.startsWith("MER")) {
+		} else if (gStop.getStopId().startsWith("MER")) {
 			stopId = 700000;
-		} else if (gStop.stop_id.startsWith("MTL")) {
+		} else if (gStop.getStopId().startsWith("MTL")) {
 			stopId = 800000;
-		} else if (gStop.stop_id.startsWith("ORM")) {
+		} else if (gStop.getStopId().startsWith("ORM")) {
 			stopId = 900000;
-		} else if (gStop.stop_id.startsWith("SMN")) {
+		} else if (gStop.getStopId().startsWith("SMN")) {
 			stopId = 1000000;
-		} else if (gStop.stop_id.startsWith("SPC")) {
+		} else if (gStop.getStopId().startsWith("SPC")) {
 			stopId = 1100000;
-		} else if (gStop.stop_id.startsWith("TSS")) {
+		} else if (gStop.getStopId().startsWith("TSS")) {
 			stopId = 1200000;
 		} else {
 			System.out.println("Stop doesn't have an ID (start with)! " + gStop);
 			System.exit(-1);
 			stopId = -1;
 		}
-		if (gStop.stop_id.endsWith("A")) {
+		if (gStop.getStopId().endsWith("A")) {
 			stopId += 1000;
-		} else if (gStop.stop_id.endsWith("B")) {
+		} else if (gStop.getStopId().endsWith("B")) {
 			stopId += 2000;
-		} else if (gStop.stop_id.endsWith("C")) {
+		} else if (gStop.getStopId().endsWith("C")) {
 			stopId += 3000;
-		} else if (gStop.stop_id.endsWith("D")) {
+		} else if (gStop.getStopId().endsWith("D")) {
 			stopId += 4000;
 		} else {
 			System.out.println("Stop doesn't have an ID (end with)! " + gStop);
@@ -204,7 +204,7 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public String getStopCode(GStop gStop) {
-		if ("0".equals(gStop.stop_code)) {
+		if ("0".equals(gStop.getStopCode())) {
 			return null;
 		}
 		return super.getStopCode(gStop);
