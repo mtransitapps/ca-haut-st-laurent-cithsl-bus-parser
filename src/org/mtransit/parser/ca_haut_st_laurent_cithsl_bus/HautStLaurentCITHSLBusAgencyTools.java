@@ -143,7 +143,7 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		gStopName = BOULEVARD.matcher(gStopName).replaceAll(BOULEVARD_REPLACEMENT);
 		gStopName = Utils.replaceAll(gStopName, START_WITH_FACES, CleanUtils.SPACE);
 		gStopName = Utils.replaceAll(gStopName, SPACE_FACES, CleanUtils.SPACE);
-		return super.cleanStopNameFR(gStopName);
+		return CleanUtils.cleanLabelFR(gStopName);
 	}
 
 	private static final Pattern DIGITS = Pattern.compile("[\\d]+");
