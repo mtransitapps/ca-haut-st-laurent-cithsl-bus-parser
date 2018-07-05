@@ -92,7 +92,7 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabel(routeLongName);
 	}
 
-	private static final String AGENCY_COLOR = "40B54D";
+	private static final String AGENCY_COLOR = "1F1F1F"; // DARK GRAY (from GTFS)
 
 	@Override
 	public String getAgencyColor() {
@@ -155,51 +155,55 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 			return Integer.valueOf(stopCode); // using stop code as stop ID
 		}
 		Matcher matcher = DIGITS.matcher(gStop.getStopId());
-		matcher.find();
-		int digits = Integer.parseInt(matcher.group());
-		int stopId;
-		if (gStop.getStopId().startsWith("LSL")) {
-			stopId = 100000;
-		} else if (gStop.getStopId().startsWith("CHT")) {
-			stopId = 200000;
-		} else if (gStop.getStopId().startsWith("GOD")) {
-			stopId = 300000;
-		} else if (gStop.getStopId().startsWith("HOW")) {
-			stopId = 400000;
-		} else if (gStop.getStopId().startsWith("HUN")) {
-			stopId = 500000;
-		} else if (gStop.getStopId().startsWith("KAH")) {
-			stopId = 600000;
-		} else if (gStop.getStopId().startsWith("MER")) {
-			stopId = 700000;
-		} else if (gStop.getStopId().startsWith("MTL")) {
-			stopId = 800000;
-		} else if (gStop.getStopId().startsWith("ORM")) {
-			stopId = 900000;
-		} else if (gStop.getStopId().startsWith("SMN")) {
-			stopId = 1000000;
-		} else if (gStop.getStopId().startsWith("SPC")) {
-			stopId = 1100000;
-		} else if (gStop.getStopId().startsWith("TSS")) {
-			stopId = 1200000;
-		} else {
-			System.out.println("Stop doesn't have an ID (start with)! " + gStop);
-			System.exit(-1);
-			stopId = -1;
+		if (matcher.find()) {
+			int digits = Integer.parseInt(matcher.group());
+			int stopId;
+			if (gStop.getStopId().startsWith("LSL")) {
+				stopId = 100000;
+			} else if (gStop.getStopId().startsWith("CHT")) {
+				stopId = 200000;
+			} else if (gStop.getStopId().startsWith("GOD")) {
+				stopId = 300000;
+			} else if (gStop.getStopId().startsWith("HOW")) {
+				stopId = 400000;
+			} else if (gStop.getStopId().startsWith("HUN")) {
+				stopId = 500000;
+			} else if (gStop.getStopId().startsWith("KAH")) {
+				stopId = 600000;
+			} else if (gStop.getStopId().startsWith("MER")) {
+				stopId = 700000;
+			} else if (gStop.getStopId().startsWith("MTL")) {
+				stopId = 800000;
+			} else if (gStop.getStopId().startsWith("ORM")) {
+				stopId = 900000;
+			} else if (gStop.getStopId().startsWith("SMN")) {
+				stopId = 1000000;
+			} else if (gStop.getStopId().startsWith("SPC")) {
+				stopId = 1100000;
+			} else if (gStop.getStopId().startsWith("TSS")) {
+				stopId = 1200000;
+			} else {
+				System.out.println("Stop doesn't have an ID (start with)! " + gStop);
+				System.exit(-1);
+				stopId = -1;
+			}
+			if (gStop.getStopId().endsWith("A")) {
+				stopId += 1000;
+			} else if (gStop.getStopId().endsWith("B")) {
+				stopId += 2000;
+			} else if (gStop.getStopId().endsWith("C")) {
+				stopId += 3000;
+			} else if (gStop.getStopId().endsWith("D")) {
+				stopId += 4000;
+			} else {
+				System.out.println("Stop doesn't have an ID (end with)! " + gStop);
+				System.exit(-1);
+			}
+			return stopId + digits;
 		}
-		if (gStop.getStopId().endsWith("A")) {
-			stopId += 1000;
-		} else if (gStop.getStopId().endsWith("B")) {
-			stopId += 2000;
-		} else if (gStop.getStopId().endsWith("C")) {
-			stopId += 3000;
-		} else if (gStop.getStopId().endsWith("D")) {
-			stopId += 4000;
-		} else {
-			System.out.println("Stop doesn't have an ID (end with)! " + gStop);
-			System.exit(-1);
-		}
-		return stopId + digits;
+		System.out.printf("\nUnexpected stop ID for %s!\n", gStop);
+		System.exit(-1);
+		return -1;
 	}
 
 	@Override
