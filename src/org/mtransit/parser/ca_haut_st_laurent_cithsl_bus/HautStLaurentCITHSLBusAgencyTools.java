@@ -199,6 +199,14 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("Ormstown", mTrip.getHeadsignId());
 				return true;
 			}
+		} else if (mTrip.getRouteId() == 111L) {
+			if (Arrays.asList( //
+					"Ste-Martine", //
+					"Ormstown" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Ormstown", mTrip.getHeadsignId());
+				return true;
+			}
 		}
 		System.out.printf("\nUnepected trips to merge %s & %s\n", mTrip, mTripToMerge);
 		System.exit(-1);
