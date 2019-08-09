@@ -117,28 +117,48 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		// https://exo.quebec/fr/planifier-trajet/autobus/CITHSL/140/
+		// https://exo.quebec/Media/Default/pdf/section4/Horaires-bus/haut-saint-laurent-horaire-140.pdf
 		map2.put(140L, new RouteTripSpec(140L, //
 				MDirectionType.NORTH.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				MDirectionType.SOUTH.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Mercier") //
 				.addTripSort(MDirectionType.NORTH.intValue(), //
 						Arrays.asList(new String[] { //
-						"79132", // Hébert / Saint-Jean-Baptiste
+						"79132", // Hébert / Saint-Jean-Baptiste #Mercier
 								"79152", // ++ Des Ormes / des Noyers
-								"79023", // Mercier (route 138 / Josime-Pelletier)
-								"79024", // Parc Mercier (rue Côté / route 138)
+								"79023", // == Mercier (route 138 / Josime-Pelletier)
+								"79182", // <> !=
+								"79194", // == <> Clinique Médicale Mercier
+								"79024", // != Parc Mercier (rue Côté / route 138)
 								"79174", // != Beaupré / Beaulac
-								"79184", // == Centre régional de Châteauguay
-								"79185", // == Anjou / Maple
-								"79186", // == CLSC de Châteauguay
-								"79187", // == Hôpital Anna-Laberge
-								"79188", // == Wal-Mart Châteauguay
+								"79184", // <> Centre régional de Châteauguay
+								"79185", // <> ++ Anjou / Maple
+								"79186", // <> CLSC de Châteauguay
+								"79187", // <> Hôpital Anna-Laberge
+								"79191", // <> ++ École secondaire Louis-Philippe-Paré
+								"79188", // <> Wal-Mart Châteauguay
 						})) //
 				.addTripSort(MDirectionType.SOUTH.intValue(), //
 						Arrays.asList(new String[] { //
-						"79188", // == Wal-Mart Châteauguay
-								"79051", // != Parc Mercier (rue Beauchemin / rue Beaupré)
+						"79184", // <> Centre régional de Châteauguay
+								"79185", // <> ++ Anjou / Maple
+								"79186", // <> CLSC de Châteauguay
+								"79187", // <> Hôpital Anna-Laberge
+								"79191", // <> ++ École secondaire Louis-Philippe-Paré
+								"79188", // <> Wal-Mart Châteauguay
+								"79051", // !== Parc Mercier (rue Beauchemin / rue Beaupré)
+								"79178", // !== Batiscan / Édouard-Laberge
+								"79192", // !== Édouard-Laberge / Henri-Ladouceur
+								"79193", // !== Édouard-Laberge / Beaupré
+								"79180", // != == Édouard-Laberge / Beauchemin
 								"79181", // ++ Beauchemin / Beloeil
-								"79183", // Josime-Pelletier / St-Jean-Baptiste #Mercier
+								"79049", // == !=
+								"79182", // != <>
+								"79183", // != Josime-Pelletier / Saint-Jean-Baptiste #Mercier =>
+								"79194", // != <> Clinique Médicale Mercier
+								"79182", // <>
+								"79057", // !=
+								"79132", // != Hébert / Saint-Jean-Baptiste #Mercier =>
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
