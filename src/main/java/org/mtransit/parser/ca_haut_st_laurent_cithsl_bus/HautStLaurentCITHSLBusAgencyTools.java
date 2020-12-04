@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
 import org.mtransit.parser.Utils;
@@ -45,11 +46,11 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("\nGenerating CITHSL bus data...");
+		MTLog.log("Generating CITHSL bus data...");
 		long start = System.currentTimeMillis();
 		this.serviceIds = extractUsefulServiceIds(args, this);
 		super.start(args);
-		System.out.printf("\nGenerating CITHSL bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+		MTLog.log("Generating CITHSL bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
@@ -86,7 +87,7 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
 
-	private static final Pattern P1METRO = Pattern.compile("(\\(métro )", Pattern.CASE_INSENSITIVE);
+	private static final Pattern P1METRO = Pattern.compile("(\\(métro )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final String P1METRO_REPLACEMENT = "\\(";
 
 	private static final Pattern SECTEUR = Pattern.compile("(secteur[s]? )", Pattern.CASE_INSENSITIVE);
@@ -114,16 +115,16 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+	private static final HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
 		// https://exo.quebec/fr/planifier-trajet/autobus/CITHSL/140/
 		// https://exo.quebec/Media/Default/pdf/section4/Horaires-bus/haut-saint-laurent-horaire-140.pdf
 		map2.put(140L, new RouteTripSpec(140L, //
 				MDirectionType.NORTH.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				MDirectionType.SOUTH.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Mercier") //
 				.addTripSort(MDirectionType.NORTH.intValue(), //
-						Arrays.asList(new String[] { //
+						Arrays.asList( //
 						"79132", // Hébert / Saint-Jean-Baptiste #Mercier
 								"79152", // ++ Des Ormes / des Noyers
 								"79023", // == Mercier (route 138 / Josime-Pelletier)
@@ -136,10 +137,10 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 								"79186", // <> CLSC de Châteauguay
 								"79187", // <> Hôpital Anna-Laberge
 								"79191", // <> ++ École secondaire Louis-Philippe-Paré
-								"79188", // <> Wal-Mart Châteauguay
-						})) //
+								"79188" // <> Wal-Mart Châteauguay
+						)) //
 				.addTripSort(MDirectionType.SOUTH.intValue(), //
-						Arrays.asList(new String[] { //
+						Arrays.asList( //
 						"79184", // <> Centre régional de Châteauguay
 								"79185", // <> ++ Anjou / Maple
 								"79186", // <> CLSC de Châteauguay
@@ -158,8 +159,8 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 								"79194", // != <> Clinique Médicale Mercier
 								"79182", // <>
 								"79057", // !=
-								"79132", // != Hébert / Saint-Jean-Baptiste #Mercier =>
-						})) //
+								"79132" // != Hébert / Saint-Jean-Baptiste #Mercier =>
+						)) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
@@ -193,7 +194,10 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
-		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
+		mTrip.setHeadsignString(
+			cleanTripHeadsign(gTrip.getTripHeadsign()),
+			gTrip.getDirectionIdOrDefault()
+		);
 	}
 
 	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
@@ -221,26 +225,26 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 			}
 		} else if (mTrip.getRouteId() == 111L) {
 			if (Arrays.asList( //
+					"Mercier-Ste-Martine", //
 					"Ste-Martine", //
+					"Mercier-Ste-Martine-Howick-Ormstown", //
 					"Ormstown" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Ormstown", mTrip.getHeadsignId());
 				return true;
 			}
 		}
-		System.out.printf("\nUnepected trips to merge %s & %s\n", mTrip, mTripToMerge);
-		System.exit(-1);
-		return false;
+		throw new MTLog.Fatal("Unepected trips to merge %s & %s!", mTrip, mTripToMerge);
 	}
 
-	private static final Pattern STATION_DE_METRO = Pattern.compile("(station de métro )", Pattern.CASE_INSENSITIVE);
+	private static final Pattern STATION_DE_METRO = Pattern.compile("(station de métro )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final String STATION_DE_METRO_REPLACEMENT = "station ";
 
-	private static final Pattern START_WITH_FACE_A = Pattern.compile("^(face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+	private static final Pattern START_WITH_FACE_A = Pattern.compile("^(face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final Pattern START_WITH_FACE_AU = Pattern.compile("^(face au )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private static final Pattern START_WITH_FACE = Pattern.compile("^(face )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-	private static final Pattern SPACE_FACE_A = Pattern.compile("( face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+	private static final Pattern SPACE_FACE_A = Pattern.compile("( face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final Pattern SPACE_WITH_FACE_AU = Pattern.compile("( face au )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private static final Pattern SPACE_WITH_FACE = Pattern.compile("( face )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
@@ -301,9 +305,7 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 			} else if (gStop.getStopId().startsWith("TSS")) {
 				stopId = 1200000;
 			} else {
-				System.out.println("Stop doesn't have an ID (start with)! " + gStop);
-				System.exit(-1);
-				stopId = -1;
+				throw new MTLog.Fatal("Stop doesn't have an ID (start with)! " + gStop);
 			}
 			if (gStop.getStopId().endsWith("A")) {
 				stopId += 1000;
@@ -314,14 +316,11 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 			} else if (gStop.getStopId().endsWith("D")) {
 				stopId += 4000;
 			} else {
-				System.out.println("Stop doesn't have an ID (end with)! " + gStop);
-				System.exit(-1);
+				throw new MTLog.Fatal("Stop doesn't have an ID (end with)! " + gStop);
 			}
 			return stopId + digits;
 		}
-		System.out.printf("\nUnexpected stop ID for %s!\n", gStop);
-		System.exit(-1);
-		return -1;
+		throw new MTLog.Fatal("Unexpected stop ID for %s!", gStop);
 	}
 
 	@Override
