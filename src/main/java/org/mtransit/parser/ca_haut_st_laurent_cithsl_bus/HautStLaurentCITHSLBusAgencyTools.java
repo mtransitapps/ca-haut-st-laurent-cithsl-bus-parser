@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Pair;
@@ -28,11 +30,13 @@ import org.mtransit.parser.mt.data.MTripStop;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
 
+import static org.mtransit.parser.Constants.EMPTY;
+
 // https://exo.quebec/en/about/open-data
 // https://exo.quebec/xdata/cithsl/google_transit.zip
 public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
-	public static void main(String[] args) {
+	public static void main(@Nullable String[] args) {
 		if (args == null || args.length == 0) {
 			args = new String[3];
 			args[0] = "input/gtfs.zip";
@@ -90,20 +94,19 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern P1METRO = Pattern.compile("(\\(métro )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final String P1METRO_REPLACEMENT = "\\(";
 
-	private static final Pattern SECTEUR = Pattern.compile("(secteur[s]? )", Pattern.CASE_INSENSITIVE);
-	private static final String SECTEUR_REPLACEMENT = "";
+	private static final Pattern SECTEUR_ = Pattern.compile("(secteur[s]? )", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern DASH_DES = Pattern.compile("(\\- de[s]? )", Pattern.CASE_INSENSITIVE);
 	private static final String DASH_DES_REPLACEMENT = "- ";
 
 	@Override
 	public String getRouteLongName(GRoute gRoute) {
-		String routeLongName = gRoute.getRouteLongName();
+		String routeLongName = gRoute.getRouteLongNameOrDefault();
 		routeLongName = CleanUtils.SAINT.matcher(routeLongName).replaceAll(CleanUtils.SAINT_REPLACEMENT);
 		routeLongName = CleanUtils.POINT.matcher(routeLongName).replaceAll(CleanUtils.POINT_REPLACEMENT);
 		routeLongName = CleanUtils.CLEAN_ET.matcher(routeLongName).replaceAll(CleanUtils.CLEAN_ET_REPLACEMENT);
 		routeLongName = P1METRO.matcher(routeLongName).replaceAll(P1METRO_REPLACEMENT);
-		routeLongName = SECTEUR.matcher(routeLongName).replaceAll(SECTEUR_REPLACEMENT);
+		routeLongName = SECTEUR_.matcher(routeLongName).replaceAll(EMPTY);
 		routeLongName = DASH_DES.matcher(routeLongName).replaceAll(DASH_DES_REPLACEMENT);
 		return CleanUtils.cleanLabel(routeLongName);
 	}
@@ -115,12 +118,31 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
+	private static final String T = "T";
+
+	private static final long RID_STARTS_WITH_T = 20_000L;
+
+	@Override
+	public long getRouteId(@NotNull GRoute gRoute) {
+		if (!Utils.isDigitsOnly(gRoute.getRouteShortName())) {
+			Matcher matcher = DIGITS.matcher(gRoute.getRouteShortName());
+			if (matcher.find()) {
+				int digits = Integer.parseInt(matcher.group());
+				if (gRoute.getRouteShortName().startsWith(T)) {
+					return RID_STARTS_WITH_T + digits;
+				}
+			}
+			throw new MTLog.Fatal("Unexpected route ID for %s!", gRoute);
+		}
+		return Long.parseLong(gRoute.getRouteShortName());
+	}
+
 	private static final HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
 		// https://exo.quebec/fr/planifier-trajet/autobus/CITHSL/140/
 		// https://exo.quebec/Media/Default/pdf/section4/Horaires-bus/haut-saint-laurent-horaire-140.pdf
-		map2.put(140L, new RouteTripSpec(140L, //
+		map2.put(140L, new RouteTripSpec(140L, // BECAUSE 1 direction ID instead of 2
 				MDirectionType.NORTH.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				MDirectionType.SOUTH.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Mercier") //
 				.addTripSort(MDirectionType.NORTH.intValue(), //
@@ -195,18 +217,17 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 			return; // split
 		}
 		mTrip.setHeadsignString(
-			cleanTripHeadsign(gTrip.getTripHeadsign()),
+			cleanTripHeadsign(gTrip.getTripHeadsignOrDefault()),
 			gTrip.getDirectionIdOrDefault()
 		);
 	}
 
-	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
-	private static final String DIRECTION_REPLACEMENT = "";
+	private static final Pattern DIRECTION_ = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
 
 	@Override
 	public String cleanTripHeadsign(String tripHeadsign) {
-		tripHeadsign = DIRECTION.matcher(tripHeadsign).replaceAll(DIRECTION_REPLACEMENT);
-		tripHeadsign = SECTEUR.matcher(tripHeadsign).replaceAll(SECTEUR_REPLACEMENT);
+		tripHeadsign = DIRECTION_.matcher(tripHeadsign).replaceAll(EMPTY);
+		tripHeadsign = SECTEUR_.matcher(tripHeadsign).replaceAll(EMPTY);
 		tripHeadsign = CleanUtils.POINT.matcher(tripHeadsign).replaceAll(CleanUtils.POINT_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanStreetTypesFRCA(tripHeadsign);
 		return CleanUtils.cleanLabelFR(tripHeadsign);
@@ -273,8 +294,8 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public int getStopId(GStop gStop) {
 		String stopCode = getStopCode(gStop);
-		if (stopCode != null && stopCode.length() > 0) {
-			return Integer.valueOf(stopCode); // using stop code as stop ID
+		if (stopCode.length() > 0) {
+			return Integer.parseInt(stopCode); // using stop code as stop ID
 		}
 		Matcher matcher = DIGITS.matcher(gStop.getStopId());
 		if (matcher.find()) {
