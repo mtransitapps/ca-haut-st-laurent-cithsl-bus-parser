@@ -5,9 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
-import org.mtransit.parser.Pair;
-import org.mtransit.parser.SplitUtils;
-import org.mtransit.parser.SplitUtils.RouteTripSpec;
 import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
@@ -15,18 +12,11 @@ import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GSpec;
 import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
-import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
-import org.mtransit.parser.mt.data.MDirectionType;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
-import org.mtransit.parser.mt.data.MTripStop;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -128,115 +118,48 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public long getRouteId(@NotNull GRoute gRoute) {
-		if (!Utils.isDigitsOnly(gRoute.getRouteShortName())) {
-			Matcher matcher = DIGITS.matcher(gRoute.getRouteShortName());
+		final String rsn = gRoute.getRouteShortName();
+		if (!Utils.isDigitsOnly(rsn)) {
+			Matcher matcher = DIGITS.matcher(rsn);
 			if (matcher.find()) {
 				int digits = Integer.parseInt(matcher.group());
-				if (gRoute.getRouteShortName().startsWith(T)) {
+				if (rsn.startsWith(T)) {
 					return RID_STARTS_WITH_T + digits;
 				}
 			}
 			throw new MTLog.Fatal("Unexpected route ID for %s!", gRoute);
 		}
-		return Long.parseLong(gRoute.getRouteShortName());
-	}
-
-	private static final HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
-
-	static {
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
-		// https://exo.quebec/fr/planifier-trajet/autobus/CITHSL/140/
-		// https://exo.quebec/Media/Default/pdf/section4/Horaires-bus/haut-saint-laurent-horaire-140.pdf
-		//noinspection deprecation
-		map2.put(140L, new RouteTripSpec(140L, // BECAUSE 1 direction ID instead of 2
-				MDirectionType.NORTH.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
-				MDirectionType.SOUTH.intValue(), MTrip.HEADSIGN_TYPE_STRING, "Mercier") //
-				.addTripSort(MDirectionType.NORTH.intValue(), //
-						Arrays.asList( //
-								"79132", // Hébert / Saint-Jean-Baptiste #Mercier
-								"79152", // ++ Des Ormes / des Noyers
-								"79023", // == Mercier (route 138 / Josime-Pelletier)
-								"79182", // <> !=
-								"79194", // == <> Clinique Médicale Mercier
-								"79024", // != Parc Mercier (rue Côté / route 138)
-								"79174", // != Beaupré / Beaulac
-								"79184", // <> Centre régional de Châteauguay
-								"79185", // <> ++ Anjou / Maple
-								"79186", // <> CLSC de Châteauguay
-								"79187", // <> Hôpital Anna-Laberge
-								"79191", // <> ++ École secondaire Louis-Philippe-Paré
-								"79188" // <> Wal-Mart Châteauguay
-						)) //
-				.addTripSort(MDirectionType.SOUTH.intValue(), //
-						Arrays.asList( //
-								"79184", // <> Centre régional de Châteauguay
-								"79185", // <> ++ Anjou / Maple
-								"79186", // <> CLSC de Châteauguay
-								"79187", // <> Hôpital Anna-Laberge
-								"79191", // <> ++ École secondaire Louis-Philippe-Paré
-								"79188", // <> Wal-Mart Châteauguay
-								"79051", // !== Parc Mercier (rue Beauchemin / rue Beaupré)
-								"79178", // !== Batiscan / Édouard-Laberge
-								"79192", // !== Édouard-Laberge / Henri-Ladouceur
-								"79193", // !== Édouard-Laberge / Beaupré
-								"79180", // != == Édouard-Laberge / Beauchemin
-								"79181", // ++ Beauchemin / Beloeil
-								"79049", // == !=
-								"79182", // != <>
-								"79183", // != Josime-Pelletier / Saint-Jean-Baptiste #Mercier =>
-								"79194", // != <> Clinique Médicale Mercier
-								"79182", // <>
-								"79057", // !=
-								"79132" // != Hébert / Saint-Jean-Baptiste #Mercier =>
-						)) //
-				.compileBothTripSort());
-		ALL_ROUTE_TRIPS2 = map2;
-	}
-
-	@NotNull
-	@Override
-	public Pair<Long[], Integer[]> splitTripStop(@NotNull MRoute mRoute, @NotNull GTrip gTrip, @NotNull GTripStop gTripStop, @NotNull ArrayList<MTrip> splitTrips, @NotNull GSpec routeGTFS) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
-		}
-		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
-	}
-
-	@Override
-	public int compareEarly(long routeId, @NotNull List<MTripStop> list1, @NotNull List<MTripStop> list2, @NotNull MTripStop ts1, @NotNull MTripStop ts2, @NotNull GStop ts1GStop, @NotNull GStop ts2GStop) {
-		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
-			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
-		}
-		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
-	}
-
-	@NotNull
-	@Override
-	public ArrayList<MTrip> splitTrip(@NotNull MRoute mRoute, @Nullable GTrip gTrip, @NotNull GSpec gtfs) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return ALL_ROUTE_TRIPS2.get(mRoute.getId()).getAllTrips();
-		}
-		return super.splitTrip(mRoute, gTrip, gtfs);
+		return Long.parseLong(rsn);
 	}
 
 	@Override
 	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return; // split
-		}
 		mTrip.setHeadsignString(
 				cleanTripHeadsign(gTrip.getTripHeadsignOrDefault()),
 				gTrip.getDirectionIdOrDefault()
 		);
 	}
 
+	@Override
+	public boolean directionFinderEnabled() {
+		return true;
+	}
+
 	private static final Pattern DIRECTION_ = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
+
+	private static final Pattern VIA_STE_DASH_ = Pattern.compile("((ste-)+)", Pattern.CASE_INSENSITIVE);
+	private static final String VIA_STE_DASH_REPLACEMENT = "Ste ";
+
+	private static final Pattern STARTS_WITH_VIA_DASH_ = Pattern.compile("(([^-]+-)+([^-]+)$)", Pattern.CASE_INSENSITIVE);
+	private static final String STARTS_WITH_VIA_DASH_REPLACEMENT = "$3";
 
 	@NotNull
 	@Override
 	public String cleanTripHeadsign(@NotNull String tripHeadsign) {
 		tripHeadsign = DIRECTION_.matcher(tripHeadsign).replaceAll(EMPTY);
 		tripHeadsign = SECTEUR_.matcher(tripHeadsign).replaceAll(EMPTY);
+		tripHeadsign = VIA_STE_DASH_.matcher(tripHeadsign).replaceAll(VIA_STE_DASH_REPLACEMENT);
+		tripHeadsign = STARTS_WITH_VIA_DASH_.matcher(tripHeadsign).replaceAll(STARTS_WITH_VIA_DASH_REPLACEMENT);
 		tripHeadsign = CleanUtils.POINT.matcher(tripHeadsign).replaceAll(CleanUtils.POINT_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanStreetTypesFRCA(tripHeadsign);
 		return CleanUtils.cleanLabelFR(tripHeadsign);
@@ -244,26 +167,6 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
-		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
-		if (mTrip.getRouteId() == 1L) {
-			if (Arrays.asList( //
-					"Ste-Martine", //
-					"Ormstown" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Ormstown", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 111L) {
-			if (Arrays.asList( //
-					"Mercier-Ste-Martine", //
-					"Ste-Martine", //
-					"Mercier-Ste-Martine-Howick-Ormstown", //
-					"Ormstown" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Ormstown", mTrip.getHeadsignId());
-				return true;
-			}
-		}
 		throw new MTLog.Fatal("Unexpected trips to merge %s & %s!", mTrip, mTripToMerge);
 	}
 
@@ -314,40 +217,40 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 			int digits = Integer.parseInt(matcher.group());
 			int stopId;
 			if (stopId1.startsWith("LSL")) {
-				stopId = 100000;
+				stopId = 100_000;
 			} else if (stopId1.startsWith("CHT")) {
-				stopId = 200000;
+				stopId = 200_000;
 			} else if (stopId1.startsWith("GOD")) {
-				stopId = 300000;
+				stopId = 300_000;
 			} else if (stopId1.startsWith("HOW")) {
-				stopId = 400000;
+				stopId = 400_000;
 			} else if (stopId1.startsWith("HUN")) {
-				stopId = 500000;
+				stopId = 500_000;
 			} else if (stopId1.startsWith("KAH")) {
-				stopId = 600000;
+				stopId = 600_000;
 			} else if (stopId1.startsWith("MER")) {
-				stopId = 700000;
+				stopId = 700_000;
 			} else if (stopId1.startsWith("MTL")) {
-				stopId = 800000;
+				stopId = 800_000;
 			} else if (stopId1.startsWith("ORM")) {
-				stopId = 900000;
+				stopId = 900_000;
 			} else if (stopId1.startsWith("SMN")) {
-				stopId = 1000000;
+				stopId = 1_000_000;
 			} else if (stopId1.startsWith("SPC")) {
-				stopId = 1100000;
+				stopId = 1_100_000;
 			} else if (stopId1.startsWith("TSS")) {
-				stopId = 1200000;
+				stopId = 1_200_000;
 			} else {
 				throw new MTLog.Fatal("Stop doesn't have an ID (start with)! " + gStop);
 			}
 			if (stopId1.endsWith("A")) {
-				stopId += 1000;
+				stopId += 1_000;
 			} else if (stopId1.endsWith("B")) {
-				stopId += 2000;
+				stopId += 2_000;
 			} else if (stopId1.endsWith("C")) {
-				stopId += 3000;
+				stopId += 3_000;
 			} else if (stopId1.endsWith("D")) {
-				stopId += 4000;
+				stopId += 4_000;
 			} else {
 				throw new MTLog.Fatal("Stop doesn't have an ID (end with)! " + gStop);
 			}
