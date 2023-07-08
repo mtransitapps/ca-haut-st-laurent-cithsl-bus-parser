@@ -8,6 +8,7 @@ import org.mtransit.commons.CleanUtils;
 import org.mtransit.commons.RegexUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
+import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.mt.data.MAgency;
 
@@ -15,7 +16,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 // https://exo.quebec/en/about/open-data
-// https://exo.quebec/xdata/cithsl/google_transit.zip
 public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(@NotNull String[] args) {
@@ -42,9 +42,9 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern P1METRO = Pattern.compile("(\\(métro )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final String P1METRO_REPLACEMENT = "\\(";
 
-	private static final Pattern SECTEUR_ = Pattern.compile("(secteur[s]? )", Pattern.CASE_INSENSITIVE);
+	private static final Pattern SECTEUR_ = Pattern.compile("(secteurs? )", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern DASH_DES = Pattern.compile("(- de[s]? )", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DASH_DES = Pattern.compile("(- des? )", Pattern.CASE_INSENSITIVE);
 	private static final String DASH_DES_REPLACEMENT = "- ";
 
 	@Override
@@ -77,6 +77,12 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public boolean useRouteShortNameForRouteId() {
 		return true;
+	}
+
+	@NotNull
+	@Override
+	public String getRouteShortName(@NotNull GRoute gRoute) {
+		return gRoute.getRouteShortName(); // used by GTFS-RT
 	}
 
 	@Override
@@ -188,6 +194,7 @@ public class HautStLaurentCITHSLBusAgencyTools extends DefaultAgencyTools {
 		if ("0".equals(gStop.getStopCode())) {
 			return EMPTY;
 		}
-		return super.getStopCode(gStop);
+		//noinspection deprecation
+		return gStop.getStopId(); // used by GTFS-RT
 	}
 }
